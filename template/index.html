@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>VueAPI</title>
+</head>
+<body>
+	<div id="app">
+		<input type="text" v-model='user' v-on:keyup.enter='adduser'> <span v-text='wrong_message' class='warn'></span>
+		<ul>
+			<li v-for='x in user_list'>
+				{{x}} <button v-on:click='deleteUser(x)'>X</button>
+			</li>
+		</ul>
+	</div>
+
+	<script  src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+	<script type="text/javascript" src = 'https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.24/vue.min.js'></script>
+	
+	<script type="text/javascript">
+		var vm = new Vue({
+			el: '#app',
+			data: {
+				user: '',
+				user_list: [],
+				message: 'hello fku',
+				wrong_message: ''
+			},
+			methods: {
+				adduser: function() {
+					var self = this;
+					var repeat = false;
+					for(var i=0;i<self.user_list.length;i++) {
+						if(self.user==self.user_list[i]){
+							this.wrong_message = 'the user is existed',
+							repeat = true;
+						} else {
+							this.wrong_message = ''
+						}
+
+					}
+					if(repeat != true){
+						$.ajax({
+							url:'/',
+							type:"POST",
+							data: {
+								user: self.user
+							},
+			  				success: function(data, status) {
+			  						self.user_list.push(self.user);
+			  						self.user = ''
+			  				}
+						})
+					}
+					
+					
+				},
+				deleteUser: function(user) {
+					var self = this;
+					$.ajax({
+						url: '/delete/'+ user,
+						type: 'GET',
+						data: {
+							deletedList: self.user_list
+						},
+						success: function(data, status) {
+							for(var i =0;i<self.user_list.length;i++) {
+								if(self.user_list[i] == user) {
+									self.user_list.splice(i, 1)
+								}
+							}
+						}
+					})
+				},
+				getUsers: function() {
+					var self = this;
+					$.ajax({
+						url: '/user',
+						type: 'GET',
+						success: function(data, status) {
+							console.log(data)
+							console.log(data.userList)
+							self.user_list = self.user_list.concat(data.userList)
+						}
+					})
+				}
+			}
+
+		})
+		vm.getUsers();
+	</script>
+
+	<style>
+		.warn {
+			color: red;
+		}
+	</style>
+</body>
+</html>
